@@ -273,7 +273,139 @@ else:
             st.info(
                 "No canonical data sources were generated."
             )
+        # ----------------------------------------------------------
+        # Migration coverage
+        # ----------------------------------------------------------
 
+        st.subheader("Migration Coverage")
+
+        st.write(
+            "Current support in the migration pipeline."
+        )
+
+        coverage_rows = [
+            {
+                "Tableau Object": "Workbook",
+                "Extracted": "Yes",
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Worksheets",
+                "Extracted": (
+                    "Yes"
+                    if migration_workbook.worksheets
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Dashboards",
+                "Extracted": (
+                    "Yes"
+                    if migration_workbook.dashboards
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Data Sources",
+                "Extracted": (
+                    "Yes"
+                    if migration_workbook.datasources
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Connections",
+                "Extracted": (
+                    "Yes"
+                    if any(
+                        datasource.connections
+                        for datasource
+                        in migration_workbook.datasources
+                    )
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Tables",
+                "Extracted": (
+                    "Yes"
+                    if any(
+                        datasource.tables
+                        for datasource
+                        in migration_workbook.datasources
+                    )
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Fields",
+                "Extracted": (
+                    "Yes"
+                    if any(
+                        datasource.fields
+                        for datasource
+                        in migration_workbook.datasources
+                    )
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Calculated Fields",
+                "Extracted": (
+                    "Yes"
+                    if any(
+                        datasource.calculation_formula
+                        for datasource
+                        in migration_workbook.datasources
+                        for datasource_field
+                        in datasource.fields
+                        if datasource_field.calculation_formula
+                    )
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+            {
+                "Tableau Object": "Joins",
+                "Extracted": (
+                    "Yes"
+                    if any(
+                        datasource.joins
+                        for datasource
+                        in migration_workbook.datasources
+                    )
+                    else "None found"
+                ),
+                "Canonical Model": "Yes",
+                "Power BI Conversion": "Not implemented",
+            },
+        ]
+
+        st.dataframe(
+            coverage_rows,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.divider()
+
+        # ----------------------------------------------------------
+        # File details
+        # ----------------------------------------------------------
         st.divider()
 
         # ----------------------------------------------------------
