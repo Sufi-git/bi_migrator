@@ -173,6 +173,13 @@ def _parse_datasource(
         datasource.connections.append(connection)
 
     # Relations represent physical tables, custom SQL, joins, etc.
+    #
+    # A join relation contains child table relations. Those child
+    # relations describe the same physical tables already represented
+    # by the datasource, so we keep unique table definitions only.
+
+    seen_tables: set[tuple[str | None, str | None, str | None]] = set()
+
     for relation in datasource_element.iter():
         if _local_name(relation.tag) != "relation":
             continue
@@ -186,19 +193,22 @@ def _parse_datasource(
             continue
 
         if relation_type in {"table", "text"}:
-            table_name = (
-                relation.attrib.get("name")
-                or relation.attrib.get("table")
+
+            table_info = TableauTableInfo(
+                name=relation.attrib.get("name"),
+                table=relation.attrib.get("table"),
+                relation_type=relation_type,
             )
 
-            datasource.tables.append(
-                TableauTableInfo(
-                    name=relation.attrib.get("name"),
-                    table=relation.attrib.get("table"),
-                    relation_type=relation_type,
-                )
+            table_key = (
+                table_info.name,
+                table_info.table,
+                table_info.relation_type,
             )
 
+            if table_key not in seen_tables:
+                seen_tables.add(table_key)
+                datasource.tables.append(table_info)
     # Tableau fields are generally represented as column elements.
     # We only inspect direct datasource children to avoid treating
     # relation-level raw column definitions as duplicate fields.
