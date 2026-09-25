@@ -29,6 +29,14 @@ class MigrationConnection:
 
 
 @dataclass
+class MigrationJoin:
+    join_type: str | None = None
+    conditions: list[str] = field(
+        default_factory=list
+    )
+
+
+@dataclass
 class MigrationDatasource:
     name: str
     connections: list[MigrationConnection] = field(
@@ -38,6 +46,9 @@ class MigrationDatasource:
         default_factory=list
     )
     fields: list[MigrationField] = field(
+        default_factory=list
+    )
+    joins: list[MigrationJoin] = field(
         default_factory=list
     )
 
