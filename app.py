@@ -7,6 +7,9 @@ import streamlit as st
 from src.bi_migrator.analyzer import (
     analyze_tableau_file,
 )
+from src.bi_migrator.tableau.converter import (
+    convert_tableau_workbook,
+)
 from src.bi_migrator.tableau.reader import (
     inspect_tableau_workbook,
 )
@@ -47,12 +50,16 @@ else:
     file_bytes = uploaded_file.getvalue()
 
     try:
-
         workbook = inspect_tableau_workbook(
             filename=uploaded_file.name,
             file_bytes=file_bytes,
         )
-                # ----------------------------------------------------------
+
+        migration_workbook = convert_tableau_workbook(
+            workbook
+        )
+
+        # ----------------------------------------------------------
         # Generate canonical migration artifact
         # ----------------------------------------------------------
 
@@ -187,7 +194,91 @@ else:
                     migration_json.decode("utf-8")
                 )
             )
+        # ----------------------------------------------------------
+        # Canonical migration model
+        # ----------------------------------------------------------
 
+        st.subheader("Migration Model")
+
+        st.write(
+            "This is the normalized representation that will "
+            "drive the future Power BI migration."
+        )
+
+        migration_col1, migration_col2, migration_col3, migration_col4 = (
+            st.columns(4)
+        )
+
+        with migration_col1:
+            st.metric(
+                "Worksheets",
+                len(migration_workbook.worksheets),
+            )
+
+        with migration_col2:
+            st.metric(
+                "Dashboards",
+                len(migration_workbook.dashboards),
+            )
+
+        with migration_col3:
+            st.metric(
+                "Data Sources",
+                len(migration_workbook.datasources),
+            )
+
+        with migration_col4:
+            migration_join_count = sum(
+                len(datasource.joins)
+                for datasource in migration_workbook.datasources
+            )
+
+            st.metric(
+                "Joins",
+                migration_join_count,
+            )
+
+        migration_rows = []
+
+        for datasource in migration_workbook.datasources:
+
+            migration_rows.append(
+                {
+                    "Data Source": datasource.name,
+                    "Connections": len(
+                        datasource.connections
+                    ),
+                    "Tables": len(
+                        datasource.tables
+                    ),
+                    "Fields": len(
+                        datasource.fields
+                    ),
+                    "Joins": len(
+                        datasource.joins
+                    ),
+                }
+            )
+
+        if migration_rows:
+
+            st.dataframe(
+                migration_rows,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        else:
+
+            st.info(
+                "No canonical data sources were generated."
+            )
+
+        st.divider()
+
+        # ----------------------------------------------------------
+        # File details
+        # ----------------------------------------------------------
         st.divider()
 
         # ----------------------------------------------------------
