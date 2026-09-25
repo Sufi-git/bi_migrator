@@ -362,17 +362,16 @@ else:
                 "Canonical Model": "Yes",
                 "Power BI Conversion": "Not implemented",
             },
-            {
+                        {
                 "Tableau Object": "Calculated Fields",
                 "Extracted": (
                     "Yes"
                     if any(
-                        datasource.calculation_formula
+                        field.calculation_formula
                         for datasource
                         in migration_workbook.datasources
-                        for datasource_field
+                        for field
                         in datasource.fields
-                        if datasource_field.calculation_formula
                     )
                     else "None found"
                 ),
