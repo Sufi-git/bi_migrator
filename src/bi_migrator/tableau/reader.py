@@ -116,7 +116,7 @@ class TableauWorkbookInfo:
 
 
 def _local_name(tag: str) -> str:
-    def _clean_field_name(name: str | None) -> str:
+def _clean_field_name(name: str | None) -> str:
     """Return a Tableau field name without identifier brackets."""
     if not name:
         return "Unnamed Field"
