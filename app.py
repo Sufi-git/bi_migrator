@@ -1,5 +1,9 @@
 import streamlit as st
 
+from src.bi_migrator.tableau.reader import (
+    inspect_tableau_workbook,
+)
+
 
 st.set_page_config(
     page_title="BI Migrator",
@@ -17,96 +21,143 @@ st.write(
 st.divider()
 
 
-# -------------------------------------------------------------------
-# Migration direction
-# -------------------------------------------------------------------
-
-st.subheader("Migration")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    source = st.selectbox(
-        "Source platform",
-        ["Tableau", "Power BI"],
-    )
-
-with col2:
-    target = "Power BI" if source == "Tableau" else "Tableau"
-
-    st.text_input(
-        "Target platform",
-        value=target,
-        disabled=True,
-    )
-
-
-st.divider()
-
-
-# -------------------------------------------------------------------
-# Tableau workbook upload
-# -------------------------------------------------------------------
-
-st.subheader("Upload Tableau Workbook")
+st.subheader("Tableau → Power BI")
 
 uploaded_file = st.file_uploader(
     "Upload a Tableau workbook",
     type=["twb", "twbx"],
-    help="Supported formats: .twb and .twbx",
+    help="Supported Tableau formats: .twb and .twbx",
 )
 
 
-if uploaded_file is not None:
-    st.success("Tableau workbook uploaded successfully.")
-
-    file_name = uploaded_file.name
-    file_size_bytes = uploaded_file.size
-    file_type = uploaded_file.type
-
-    # Determine extension
-    file_extension = (
-        file_name.rsplit(".", 1)[-1].lower()
-        if "." in file_name
-        else "unknown"
-    )
-
-    # Convert size to KB / MB for display
-    file_size_kb = file_size_bytes / 1024
-    file_size_mb = file_size_bytes / (1024 * 1024)
-
-    st.subheader("File Details")
-
-    detail_col1, detail_col2, detail_col3, detail_col4 = st.columns(4)
-
-    with detail_col1:
-        st.metric("Filename", file_name)
-
-    with detail_col2:
-        st.metric("Extension", f".{file_extension}")
-
-    with detail_col3:
-        st.metric("Size", f"{file_size_kb:.2f} KB")
-
-    with detail_col4:
-        st.metric("Type", file_type or "Unknown")
-
-    st.divider()
-
-    st.write("### File Information")
-
-    st.write(
-        {
-            "filename": file_name,
-            "extension": f".{file_extension}",
-            "size_bytes": file_size_bytes,
-            "size_kb": round(file_size_kb, 2),
-            "size_mb": round(file_size_mb, 4),
-            "content_type": file_type or "Unknown",
-        }
+if uploaded_file is None:
+    st.info(
+        "Upload a .twb or .twbx Tableau workbook to begin."
     )
 
 else:
-    st.info(
-        "Upload a Tableau .twb or .twbx workbook to view its file details."
-    )
+    file_bytes = uploaded_file.getvalue()
+
+    try:
+        workbook = inspect_tableau_workbook(
+            filename=uploaded_file.name,
+            file_bytes=file_bytes,
+        )
+
+        st.success(
+            f"Successfully inspected {workbook.filename}"
+        )
+
+        st.subheader("Workbook Summary")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric(
+                "Format",
+                workbook.extension,
+            )
+
+        with col2:
+            st.metric(
+                "Worksheets",
+                workbook.worksheet_count,
+            )
+
+        with col3:
+            st.metric(
+                "Dashboards",
+                workbook.dashboard_count,
+            )
+
+        with col4:
+            st.metric(
+                "Data Sources",
+                workbook.datasource_count,
+            )
+
+        st.divider()
+
+        st.subheader("File Details")
+
+        st.write(
+            {
+                "filename": workbook.filename,
+                "format": workbook.extension,
+                "uploaded_size_bytes": len(file_bytes),
+                "workbook_xml_size_bytes": workbook.workbook_xml_size,
+            }
+        )
+
+        if workbook.twb_member_name:
+            st.write(
+                {
+                    "embedded_workbook": workbook.twb_member_name,
+                    "packaged_file_count": workbook.packaged_file_count,
+                }
+            )
+
+        st.divider()
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.subheader("Worksheets")
+
+            if workbook.worksheet_names:
+                st.dataframe(
+                    {"Worksheet": workbook.worksheet_names},
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("No worksheets found.")
+
+        with col2:
+            st.subheader("Dashboards")
+
+            if workbook.dashboard_names:
+                st.dataframe(
+                    {"Dashboard": workbook.dashboard_names},
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("No dashboards found.")
+
+        with col3:
+            st.subheader("Data Sources")
+
+            if workbook.datasource_names:
+                st.dataframe(
+                    {"Data Source": workbook.datasource_names},
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("No data sources found.")
+
+        if workbook.packaged_files:
+            st.divider()
+
+            st.subheader("Packaged Files")
+
+            st.caption(
+                "Showing the first 50 files contained in the .twbx package."
+            )
+
+            st.dataframe(
+                workbook.packaged_files[:50],
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    except ValueError as exc:
+        st.error(str(exc))
+
+    except Exception as exc:
+        st.error(
+            "An unexpected error occurred while inspecting the workbook."
+        )
+
+        st.exception(exc)
