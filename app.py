@@ -20,13 +20,12 @@ st.write(
 
 st.divider()
 
-
 st.subheader("Tableau → Power BI")
 
 uploaded_file = st.file_uploader(
     "Upload a Tableau workbook",
     type=["twb", "twbx"],
-    help="Supported Tableau formats: .twb and .twbx",
+    help="Supported formats: .twb and .twbx",
 )
 
 
@@ -53,28 +52,16 @@ else:
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            st.metric(
-                "Format",
-                workbook.extension,
-            )
+            st.metric("Format", workbook.extension)
 
         with col2:
-            st.metric(
-                "Worksheets",
-                workbook.worksheet_count,
-            )
+            st.metric("Worksheets", workbook.worksheet_count)
 
         with col3:
-            st.metric(
-                "Dashboards",
-                workbook.dashboard_count,
-            )
+            st.metric("Dashboards", workbook.dashboard_count)
 
         with col4:
-            st.metric(
-                "Data Sources",
-                workbook.datasource_count,
-            )
+            st.metric("Data Sources", workbook.datasource_count)
 
         st.divider()
 
@@ -142,10 +129,6 @@ else:
 
             st.subheader("Packaged Files")
 
-            st.caption(
-                "Showing the first 50 files contained in the .twbx package."
-            )
-
             st.dataframe(
                 workbook.packaged_files[:50],
                 use_container_width=True,
@@ -159,5 +142,4 @@ else:
         st.error(
             "An unexpected error occurred while inspecting the workbook."
         )
-
         st.exception(exc)
