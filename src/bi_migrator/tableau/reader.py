@@ -116,6 +116,13 @@ class TableauWorkbookInfo:
 
 
 def _local_name(tag: str) -> str:
+    """Return the XML tag name without a namespace."""
+    if "}" in tag:
+        return tag.rsplit("}", 1)[-1]
+
+    return tag
+
+
 def _clean_field_name(name: str | None) -> str:
     """Return a Tableau field name without identifier brackets."""
     if not name:
@@ -123,6 +130,8 @@ def _clean_field_name(name: str | None) -> str:
 
     if name.startswith("[") and name.endswith("]"):
         return name[1:-1]
+
+    return name
 
     return name
     """Return the XML tag name without a namespace."""
