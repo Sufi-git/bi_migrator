@@ -116,6 +116,15 @@ class TableauWorkbookInfo:
 
 
 def _local_name(tag: str) -> str:
+    def _clean_field_name(name: str | None) -> str:
+    """Return a Tableau field name without identifier brackets."""
+    if not name:
+        return "Unnamed Field"
+
+    if name.startswith("[") and name.endswith("]"):
+        return name[1:-1]
+
+    return name
     """Return the XML tag name without a namespace."""
     if "}" in tag:
         return tag.rsplit("}", 1)[-1]
@@ -224,7 +233,7 @@ def _parse_datasource(
                 break
 
         field_info = TableauFieldInfo(
-            name=child.attrib.get("name", "Unnamed Field"),
+            name=_clean_field_name(child.attrib.get("name")),
             caption=child.attrib.get("caption"),
             datatype=child.attrib.get("datatype"),
             role=child.attrib.get("role"),
