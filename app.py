@@ -52,6 +52,32 @@ else:
             filename=uploaded_file.name,
             file_bytes=file_bytes,
         )
+                # ----------------------------------------------------------
+        # Generate canonical migration artifact
+        # ----------------------------------------------------------
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+
+            temp_dir_path = Path(temp_dir)
+
+            input_path = (
+                temp_dir_path
+                / Path(uploaded_file.name).name
+            )
+
+            output_path = (
+                temp_dir_path
+                / "migration.json"
+            )
+
+            input_path.write_bytes(file_bytes)
+
+            analyze_tableau_file(
+                input_path=input_path,
+                output_path=output_path,
+            )
+
+            migration_json = output_path.read_bytes()
 
         st.success(
             f"Successfully inspected {workbook.filename}"
@@ -123,6 +149,43 @@ else:
             st.metric(
                 "Joins",
                 workbook.join_count,
+            )
+
+        st.divider()
+                # ----------------------------------------------------------
+        # Migration artifact
+        # ----------------------------------------------------------
+
+        st.subheader("Migration Artifact")
+
+        artifact_col1, artifact_col2 = st.columns(
+            [2, 1]
+        )
+
+        with artifact_col1:
+
+            st.success(
+                "Canonical migration.json generated successfully."
+            )
+
+        with artifact_col2:
+
+            st.download_button(
+                label="⬇️ Download migration.json",
+                data=migration_json,
+                file_name="migration.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+
+        with st.expander(
+            "Preview migration.json"
+        ):
+
+            st.json(
+                json.loads(
+                    migration_json.decode("utf-8")
+                )
             )
 
         st.divider()
