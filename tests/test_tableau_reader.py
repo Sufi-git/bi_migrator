@@ -1,5 +1,15 @@
+import sys
 from io import BytesIO
+from pathlib import Path
 from zipfile import ZipFile
+
+
+# Make the repository root importable in every test environment.
+ROOT = Path(__file__).resolve().parents[1]
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 
 from src.bi_migrator.tableau.reader import (
     inspect_tableau_workbook,
