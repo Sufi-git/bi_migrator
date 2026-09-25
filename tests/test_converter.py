@@ -27,6 +27,18 @@ SAMPLE_TWB = b"""<?xml version="1.0" encoding="utf-8"?>
                 type="table"
             />
 
+            <relation
+                type="join"
+                join="inner"
+            >
+                <clause type="join">
+                    <expression op="=">
+                        <expression op="[Orders].[Customer ID]" />
+                        <expression op="[Customers].[ID]" />
+                    </expression>
+                </clause>
+            </relation>
+
             <column
                 name="[Sales]"
                 caption="Sales"
@@ -79,5 +91,13 @@ def test_convert_tableau_workbook():
     )
 
     assert datasource.tables[0].name == "Orders"
+
+    assert len(datasource.joins) == 1
+    assert datasource.joins[0].join_type == "inner"
+    assert datasource.joins[0].conditions == [
+        "=",
+        "[Orders].[Customer ID]",
+        "[Customers].[ID]",
+    ]
 
     assert datasource.fields[0].name == "Sales"
