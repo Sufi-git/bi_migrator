@@ -33,19 +33,17 @@ class TableauWorkbookInfo:
 
 
 def _local_name(tag: str) -> str:
-    """Return an XML tag name without a namespace."""
+    """Return the XML tag name without a namespace."""
     if "}" in tag:
         return tag.rsplit("}", 1)[-1]
 
     return tag
 
 
-def _parse_twb_xml(xml_bytes: bytes) -> tuple[
-    list[str],
-    list[str],
-    list[str],
-]:
-    """Parse Tableau workbook XML and extract basic workbook objects."""
+def _parse_twb_xml(
+    xml_bytes: bytes,
+) -> tuple[list[str], list[str], list[str]]:
+    """Extract basic Tableau workbook objects from TWB XML."""
     try:
         root = ET.fromstring(xml_bytes)
     except ET.ParseError as exc:
@@ -87,14 +85,10 @@ def inspect_tableau_workbook(
     file_bytes: bytes,
 ) -> TableauWorkbookInfo:
     """
-    Inspect a .twb or .twbx Tableau workbook.
+    Inspect a Tableau .twb or .twbx workbook.
 
-    For .twb:
-        Parse the workbook XML directly.
-
-    For .twbx:
-        Read the ZIP package in memory, locate the embedded .twb,
-        and parse that workbook XML.
+    .twb  -> parse XML directly
+    .twbx -> open ZIP package and locate the embedded .twb
     """
     extension = filename.rsplit(".", 1)[-1].lower()
 
@@ -108,7 +102,6 @@ def inspect_tableau_workbook(
 
     packaged_files: list[dict[str, int]] = []
     twb_member_name: str | None = None
-    workbook_xml: bytes
 
     if extension == "twb":
         workbook_xml = file_bytes
@@ -138,6 +131,7 @@ def inspect_tableau_workbook(
                     )
 
                 twb_member = twb_members[0]
+
                 twb_member_name = twb_member.filename
                 workbook_xml = archive.read(twb_member)
 
