@@ -2,6 +2,7 @@ from src.bi_migrator.model import (
     MigrationConnection,
     MigrationDatasource,
     MigrationField,
+    MigrationJoin,
     MigrationTable,
     MigrationWorkbook,
 )
@@ -52,12 +53,21 @@ def convert_tableau_workbook(
             for field in datasource.fields
         ]
 
+        joins = [
+            MigrationJoin(
+                join_type=join.join_type,
+                conditions=list(join.conditions),
+            )
+            for join in datasource.joins
+        ]
+
         datasources.append(
             MigrationDatasource(
                 name=datasource.name,
                 connections=connections,
                 tables=tables,
                 fields=fields,
+                joins=joins,
             )
         )
 
