@@ -31,11 +31,14 @@ def test_inspect_twb():
     )
 
     assert result.extension == ".twb"
+
     assert result.worksheet_count == 2
     assert result.dashboard_count == 1
     assert result.datasource_count == 1
 
     assert "Sales by Region" in result.worksheet_names
+    assert "Sales Trend" in result.worksheet_names
+
     assert "Sales Overview" in result.dashboard_names
     assert "Sales Data" in result.datasource_names
 
@@ -44,8 +47,15 @@ def test_inspect_twbx():
     buffer = BytesIO()
 
     with ZipFile(buffer, "w") as archive:
-        archive.writestr("Sales Workbook.twb", SAMPLE_TWB)
-        archive.writestr("Data/sample.csv", "Region,Sales\nWest,100")
+        archive.writestr(
+            "Sales Workbook.twb",
+            SAMPLE_TWB,
+        )
+
+        archive.writestr(
+            "Data/sample.csv",
+            "Region,Sales\nWest,100\nEast,200",
+        )
 
     result = inspect_tableau_workbook(
         "sales.twbx",
@@ -53,6 +63,7 @@ def test_inspect_twbx():
     )
 
     assert result.extension == ".twbx"
+
     assert result.twb_member_name == "Sales Workbook.twb"
 
     assert result.worksheet_count == 2
